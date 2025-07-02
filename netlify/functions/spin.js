@@ -5,6 +5,28 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY // Keep this secret!
 )
 
+const SYMBOLS = [0, 1, 2, 3, 4, 5]
+import { WIN_TABLE } from "./winTable";
+
+
+// Helper to check win and payout
+function getPayout(spin) {
+  const key = spin.join(',')
+  // Check for three-of-a-kind
+  if (WIN_TABLE[key] !== undefined) return { win: true, payout: WIN_TABLE[key] }
+  // Check for two-of-a-kind
+  const twoKey = `${spin[0]},${spin[1]},*`
+  if (WIN_TABLE[twoKey] !== undefined && spin[0] === spin[1]) {
+    return { win: true, payout: WIN_TABLE[twoKey] }
+  }
+  // Check for one-of-a-kind
+  const oneKey = `${spin[0]},*,*`
+  if (WIN_TABLE[oneKey] !== undefined) {
+    return { win: true, payout: WIN_TABLE[oneKey] }
+  }
+  return { win: false, payout: 0 }
+}
+
 exports.handler = async (event, context) => {
   const token = event.headers.authorization?.replace('Bearer ', '')
 
@@ -38,15 +60,13 @@ exports.handler = async (event, context) => {
     }
   }
 
-  // RNG: simulate a basic slot outcome
-  const symbols = ['🍒', '🍋', '🔔', '💎', '7']
+  // RNG: simulate a basic slot outcome with 6 symbols
   const spin = Array.from({ length: 3 }, () =>
-    symbols[Math.floor(Math.random() * symbols.length)]
+    SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)]
   )
 
-  // Simple win condition: all 3 match
-  const win = spin.every(s => s === spin[0])
-  const payout = win ? 50 : 0
+  // Check win and payout
+  const { win, payout } = getPayout(spin)
   const newCoins = profile.coins - spinCost + payout
 
   // Update coins
@@ -62,7 +82,7 @@ exports.handler = async (event, context) => {
   return {
     statusCode: 200,
     body: JSON.stringify({
-      spin,
+      spin, // array of numbers, e.g. [0,2,5]
       win,
       payout,
       coins: newCoins,
