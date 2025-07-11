@@ -1,0 +1,103 @@
+.slot-wheels {
+  display: flex;
+  justify-content: center;
+  margin: 1rem 0;
+}
+
+.slot-wheel {
+  font-size: 2.5rem;
+  margin: 0 0.5rem;
+  transition: transform 0.2s;
+}
+
+.slot-wheel.spinning {
+  animation: spin 0.5s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotateX(0deg);}
+  100% { transform: rotateX(360deg);}
+}
+
+.spin-btn {
+  padding: 0.5rem 1.5rem;
+  font-size: 1.1rem;
+  background: #f39c12;
+  color: #fff;
+  border: none;
+  border-radius: 0.4rem;
+  cursor: pointer;
+  margin-top: 1rem;
+  transition: background 0.2s;
+}
+
+.spin-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.winner-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.winner-table th,
+.winner-table td {
+  border: 1px solid #ddd;
+  padding: 0.5rem 1rem;
+  text-align: center;
+}
+
+.winner-table th {
+  background: #f9e79f;
+}
+
+.coins-label {
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+.coins-value {
+  color: #f39c12;
+}
+.spin-result {
+  margin: 1rem 0;
+}
+.result-win {
+  color: #27ae60;
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+.result-lose {
+  color: #c0392b;
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+.winner-table-title {
+  margin-top: 2rem;
+}
+
+.slot-reel {
+  width: 80px; /* Adjust to symbol width in slotreel.webp */
+  height: 240px; /* 3 symbols tall */
+  background-repeat: repeat;
+  background-size: 100% auto;
+  border: 2px solid #333;
+  border-radius: 10px;
+  margin: 0 0.5rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  transition: background-position 0.7s cubic-bezier(0.40, -0.01, 0.60, 1.20);
+  display: inline-block;
+  overflow: hidden;
+}
+
+.slot-reel.spinning {
+  animation: reel-spin-reverse 0.5s linear infinite;
+  transition: none;
+}
+
+@keyframes reel-spin-reverse {
+  0% { background-position-y: 0px; }
+  100% { background-position-y: 480px; } /* reverse direction, adjust as needed */
+}
+

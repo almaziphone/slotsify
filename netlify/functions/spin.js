@@ -1,12 +1,12 @@
-const { createClient } = require('@supabase/supabase-js')
+import { createClient } from '@supabase/supabase-js'
+import { WIN_TABLE } from "./winTable";
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY // Keep this secret!
 )
 
-const SYMBOLS = [0, 1, 2, 3, 4, 5]
-import { WIN_TABLE } from "./winTable";
+const SYMBOLS = [0, 1, 2, 3, 4, 5, 6, 7, 8] // Representing symbols as numbers for simplicity
 
 
 // Helper to check win and payout
@@ -27,7 +27,7 @@ function getPayout(spin) {
   return { win: false, payout: 0 }
 }
 
-exports.handler = async (event, context) => {
+export async function handler(event) {
   const token = event.headers.authorization?.replace('Bearer ', '')
 
   if (!token) {
@@ -60,7 +60,7 @@ exports.handler = async (event, context) => {
     }
   }
 
-  // RNG: simulate a basic slot outcome with 6 symbols
+  // RNG: simulate a basic slot outcome with the right amount of symbols
   const spin = Array.from({ length: 3 }, () =>
     SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)]
   )

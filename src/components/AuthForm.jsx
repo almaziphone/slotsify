@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { supabase } from '../supabaseClient'
 
 export default function AuthForm({ onAuth }) {
   const [email, setEmail] = useState('')
@@ -13,30 +12,23 @@ export default function AuthForm({ onAuth }) {
     setLoading(true)
     setErrorMsg(null)
 
-    const method = isLogin ? 'signInWithPassword' : 'signUp'
-    const { data, error } = await supabase.auth[method]({ email, password })
+    const endpoint = isLogin ? '/.netlify/functions/signInWithPassword' : '/.netlify/functions/createProfile'
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    })
+
+    const { data, error } = await response.json()
 
     if (error) {
-      setErrorMsg(error.message)
+      setErrorMsg(error.message || 'An error occurred')
       setLoading(false)
       return
     }
 
-    // On signup, create a profile
-    if (!isLogin && data?.user) {
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert([{ id: data.user.id, coins: 100, username: '' }])
-
-      if (profileError) {
-        setErrorMsg('Signup succeeded, but profile creation failed: ' + profileError.message)
-        setLoading(false)
-        return
-      }
-    }
-
     setLoading(false)
-    onAuth(data)
+    onAuth(data) // data contains user, session, and profile
   }
 
   return (

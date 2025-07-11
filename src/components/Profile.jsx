@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
-import { SYMBOLS_MAP, WIN_TABLE_DISPLAY, formatCombo } from './winTable'
-import '../styles/Profile.css' // Assuming you have some styles for the profile
+import '../styles/Profile.css'
+import SlotMachine from './SlotMachine'
 
-export default function Profile({ onLogout }) {
-  const [profile, setProfile] = useState(null)
+export default function Profile({ user: initialUser, profile: initialProfile, onLogout }) {
+  const [profile, setProfile] = useState(initialProfile || null)
+  const [user, setUser] = useState(initialUser || null)
   const [errorMsg, setErrorMsg] = useState(null)
   const [showProfileForm, setShowProfileForm] = useState(false)
   const [username, setUsername] = useState('')
@@ -15,16 +16,21 @@ export default function Profile({ onLogout }) {
   useEffect(() => {
     async function loadProfile() {
       setErrorMsg(null)
-      const { data: userData } = await supabase.auth.getUser()
-      const user = userData?.user
-      if (!user) {
+      if (initialUser) {
+        setUser(initialUser)
+      } else {
+        const { data: userData } = await supabase.auth.getUser()
+        setUser(userData?.user)
+      }
+      const currentUser = initialUser || (await supabase.auth.getUser()).data?.user
+      if (!currentUser) {
         setErrorMsg('User not found.')
         return
       }
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', user.id)
+        .eq('id', currentUser.id)
         .single()
       if (error) {
         if (error.code === 'PGRST116' || error.message.includes('No rows')) {
@@ -36,8 +42,10 @@ export default function Profile({ onLogout }) {
         setProfile(data)
       }
     }
-    loadProfile()
-  }, [])
+    if (!profile) {
+      loadProfile()
+    }
+  }, [initialUser, profile])
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
@@ -47,20 +55,30 @@ export default function Profile({ onLogout }) {
   const handleProfileCreate = async (e) => {
     e.preventDefault()
     setErrorMsg(null)
-    const { data: userData } = await supabase.auth.getUser()
-    const user = userData?.user
-    if (!user) {
-      setErrorMsg('User not found.')
+    // Get current session for auth
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) {
+      setErrorMsg('Not authenticated.')
       return
     }
-    const { error } = await supabase
-      .from('profiles')
-      .insert([{ id: user.id, coins: 100, username }])
-    if (error) {
-      setErrorMsg('Failed to create profile: ' + error.message)
-    } else {
-      setShowProfileForm(false)
-      setProfile({ id: user.id, coins: 100, username })
+    try {
+      const res = await fetch('/.netlify/functions/createProfile', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ username }),
+      })
+      const { data, error } = await res.json()
+      if (error) {
+        setErrorMsg('Failed to create profile: ' + (error.message || error))
+      } else {
+        setShowProfileForm(false)
+        setProfile({ id: data.id, coins: data.coins, username: data.username })
+      }
+    } catch (err) {
+      setErrorMsg('Failed to create profile: ' + err.message)
     }
   }
 
@@ -153,53 +171,14 @@ export default function Profile({ onLogout }) {
           <h2 style={{ margin: 0 }}>Welcome, {profile.username || 'Player'}!</h2>
           <button onClick={handleLogout} style={{ fontSize: '1rem' }}>Logout</button>
         </div>
-        <p style={{ fontWeight: 'bold', fontSize: '1.2rem' }}>Coins: <span style={{ color: '#f39c12' }}>{profile.coins}</span></p>
-        {/* Slot machine wheels */}
-        <div className="slot-wheels">
-          {wheels.map((n, i) => (
-            <span className={`slot-wheel${spinLoading ? ' spinning' : ''}`} key={i}>{SYMBOLS_MAP[n]}</span>
-          ))}
-        </div>
-        <button
-          className="spin-btn"
-          onClick={handleSpin}
-          disabled={spinLoading || profile.coins < 10}
-        >
-          {spinLoading ? 'Spinning...' : 'Spin (10 coins)'}
-        </button>
-        {spinResult && (
-          <div style={{ margin: '1rem 0' }}>
-            <p style={{
-              color: spinResult.win ? '#27ae60' : '#c0392b',
-              fontWeight: 'bold',
-              fontSize: '1.2rem'
-            }}>
-              {spinResult.win
-                ? `🎉 You won ${spinResult.payout} coins!`
-                : 'No win this time.'}
-            </p>
-          </div>
-        )}
-        {/* Winner table */}
-        <h3 style={{ marginTop: '2rem' }}>Winner Table</h3>
-        <table className="winner-table">
-          <thead>
-            <tr>
-              <th>Combo</th>
-              <th>Payout</th>
-            </tr>
-          </thead>
-          <tbody>
-            {WIN_TABLE_DISPLAY.map(row => (
-              <tr key={row.combo.join('-')}>
-                <td>{formatCombo(row.combo)}</td>
-                <td>{row.payout}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <SlotMachine
+          coins={profile.coins}
+          onSpin={handleSpin}
+          spinLoading={spinLoading}
+          spinResult={spinResult}
+          wheels={wheels}
+        />
       </div>
-
     </div>
   )
 }
