@@ -86,13 +86,13 @@
   border-radius: 10px;
   margin: 0 0.5rem;
   box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-  transition: background-position 0.7s cubic-bezier(0.40, -0.01, 0.60, 1.20);
+  transition: background-position 0.7s cubic-bezier(0.0, -0.01, 0.60, 1.20);
   display: inline-block;
   overflow: hidden;
 }
 
 .slot-reel.spinning {
-  animation: reel-spin-reverse 0.5s linear infinite;
+  animation: reel-spin-reverse 0.3s linear infinite;
   transition: none;
 }
 

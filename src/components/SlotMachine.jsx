@@ -7,6 +7,7 @@ const REEL_SYMBOLS_COUNT = 9; // adjust to match number of symbols in slotreel.w
 const REEL_COUNT = 3;
 const REEL_STOP_DELAY = 400; // ms between each reel stop
 const SPIN_SPEED = 24; // px per frame (adjust for speed)
+const EXTRA_SPINS = 2; // Number of extra full spins before stopping
 
 export default function SlotMachine({ coins, onSpin, spinLoading, spinResult, wheels }) {
   const [reelPositions, setReelPositions] = useState(() => wheels.map(n => getReelPosition(n)));
@@ -17,7 +18,25 @@ export default function SlotMachine({ coins, onSpin, spinLoading, spinResult, wh
   const rafRef = useRef();
 
   function getReelPosition(n) {
+    // n is 1-based, so symbol 1 is at offset 0
     return -(n - 1) * REEL_SYMBOL_HEIGHT;
+  }
+
+  // Helper to calculate the final offset for a reel, given its current offset and target symbol
+  function calculateTargetOffset(currentOffset, targetSymbol) {
+    // Normalize currentOffset to [0, totalHeight)
+    const totalHeight = REEL_SYMBOL_HEIGHT * REEL_SYMBOLS_COUNT;
+    let normalized = ((currentOffset % totalHeight) + totalHeight) % totalHeight;
+    // Target offset for the symbol
+    const targetOffset = getReelPosition(targetSymbol);
+    // Calculate how much to move to land on target, plus extra spins
+    // Since background moves up (negative), we subtract
+    let distance = (targetOffset - (-normalized)) - (EXTRA_SPINS * totalHeight);
+    // Ensure distance is negative (moving up)
+    if (distance > 0) {
+      distance -= totalHeight;
+    }
+    return currentOffset + distance;
   }
 
   // Animate spinning reels with requestAnimationFrame
@@ -53,7 +72,7 @@ export default function SlotMachine({ coins, onSpin, spinLoading, spinResult, wh
     }
   }, [spinLoading]);
 
-  // Staggered stop for each reel
+  // Staggered stop for each reel with calculated distance
   useEffect(() => {
     if (!spinLoading && prevWheels.current !== wheels) {
       wheels.forEach((n, i) => {
@@ -63,19 +82,37 @@ export default function SlotMachine({ coins, onSpin, spinLoading, spinResult, wh
             updated[i] = false;
             return updated;
           });
-          // Wait a tick before showing transition for smooth effect
+          // Calculate the animated stop offset
           setTimeout(() => {
             setShowTransition(trans => {
               const updated = [...trans];
               updated[i] = true;
               return updated;
             });
-            setReelPositions(pos => {
-              const updated = [...pos];
-              updated[i] = getReelPosition(n);
+            setSpinningOffsets(offsets => {
+              const updated = [...offsets];
+              updated[i] = calculateTargetOffset(offsets[i], n);
               return updated;
             });
-          }, 20); // 20ms delay to ensure transition is applied after offset
+            // After transition, snap to exact position (to avoid rounding errors)
+            setTimeout(() => {
+              setShowTransition(trans => {
+                const updated = [...trans];
+                updated[i] = false;
+                return updated;
+              });
+              setReelPositions(pos => {
+                const updated = [...pos];
+                updated[i] = getReelPosition(n);
+                return updated;
+              });
+              setSpinningOffsets(offsets => {
+                const updated = [...offsets];
+                updated[i] = 0;
+                return updated;
+              });
+            }, 20); 
+          }, 20);
         }, i * REEL_STOP_DELAY);
       });
       prevWheels.current = wheels;
@@ -96,9 +133,8 @@ export default function SlotMachine({ coins, onSpin, spinLoading, spinResult, wh
       <div className="slot-wheels">
         {wheels.map((n, i) => {
           const isSpinning = spinningReels[i];
-          const bgPos = isSpinning
-            ? `0px ${-spinningOffsets[i]}px`
-            : `0px ${reelPositions[i] ?? 0}px`;
+          // Use spinningOffsets for both spinning and animated stop
+          const bgPos = `0px ${-spinningOffsets[i] + (isSpinning ? 0 : (reelPositions[i] ?? 0))}px`;
           return (
             <div
               className={`slot-reel${isSpinning ? ' spinning' : ''}`}
@@ -108,7 +144,7 @@ export default function SlotMachine({ coins, onSpin, spinLoading, spinResult, wh
                 backgroundPosition: bgPos,
                 transition: isSpinning || !showTransition[i]
                   ? 'none'
-                  : 'background-position 0.7s cubic-bezier(0.40, -0.01, 0.60, 1.20)',
+                  : 'background-position 0.3s cubic-bezier(0.40, -0.01, 0.60, 1.20)',
                 height: REEL_SYMBOL_HEIGHT * 3,
                 width: 80,
                 overflow: 'hidden',
