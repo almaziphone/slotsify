@@ -6,10 +6,11 @@ const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
 const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
 
 export async function handler(event) {
-  const { email, password } = JSON.parse(event.body)
+  const { username, email, password } = JSON.parse(event.body)
 
   // Create user
   const { data: userData, error: userError } = await supabase.auth.admin.createUser({
+    username,
     email,
     password,
     email_confirm: true,
@@ -26,7 +27,7 @@ export async function handler(event) {
   const userId = userData.user.id
   const { error: profileError } = await supabase
     .from('profiles')
-    .insert([{ id: userId, coins: 100, username: '' }])
+    .insert([{ id: userId, coins: 1000, username: '' }])
 
   if (profileError) {
     return {

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 
 export default function AuthForm({ onAuth }) {
+  const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isLogin, setIsLogin] = useState(true)
@@ -16,7 +17,7 @@ export default function AuthForm({ onAuth }) {
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ username, email, password }),
     })
 
     const { data, error } = await response.json()
@@ -35,6 +36,9 @@ export default function AuthForm({ onAuth }) {
     <div className="auth-form">
       <h2>{isLogin ? 'Login' : 'Sign Up'}</h2>
       <form onSubmit={handleSubmit}>
+        {isLogin ? null : (
+          <input type="text" placeholder="Username" value={username} onChange={e => setUsername(e.target.value)} required />
+        )}
         <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required />
         <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} required />
         <button type="submit" disabled={loading}>
