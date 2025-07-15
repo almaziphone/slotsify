@@ -14,6 +14,7 @@ export default function SlotMachine({ coins, onSpin, spinLoading, spinResult, wh
   const [spinningReels, setSpinningReels] = useState([false, false, false]);
   const [spinningOffsets, setSpinningOffsets] = useState([0, 0, 0]);
   const [showTransition, setShowTransition] = useState([false, false, false]);
+  const [allReelsStopped, setAllReelsStopped] = useState(true);
   const prevWheels = useRef(wheels);
   const rafRef = useRef();
 
@@ -69,6 +70,7 @@ export default function SlotMachine({ coins, onSpin, spinLoading, spinResult, wh
       setSpinningReels([true, true, true]);
       setSpinningOffsets([0, 0, 0]);
       setShowTransition([false, false, false]);
+      setAllReelsStopped(false);
     }
   }, [spinLoading]);
 
@@ -80,6 +82,9 @@ export default function SlotMachine({ coins, onSpin, spinLoading, spinResult, wh
           setSpinningReels(reels => {
             const updated = [...reels];
             updated[i] = false;
+            if (updated.every(r => !r)) {
+              setAllReelsStopped(true);
+            }
             return updated;
           });
           // Calculate the animated stop offset
@@ -156,11 +161,11 @@ export default function SlotMachine({ coins, onSpin, spinLoading, spinResult, wh
       <button
         className="spin-btn"
         onClick={onSpin}
-        disabled={spinLoading || coins < 10}
+        disabled={spinLoading || coins < 10 || !allReelsStopped }
       >
-        {spinLoading ? 'Spinning...' : 'Spin (10 coins)'}
+        {spinLoading || !allReelsStopped  ? 'Spinning...' : 'Spin (10 coins)'}
       </button>
-      {!spinResult ? (<div><p className='result-win empty'>&nbsp;</p></div>) : (
+      {(!spinResult || !allReelsStopped) ? (<div><p className='result-win empty'>&nbsp;</p></div>) : (
         <div className="spin-result">
           <p className={spinResult.win ? 'result-win' : 'result-lose'}>
             {spinResult.win
