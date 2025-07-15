@@ -29,6 +29,7 @@ export default function AuthForm({ onAuth }) {
     }
 
     setLoading(false)
+    setIsLogin(!isLogin)
     onAuth(data) // data contains user, session, and profile
   }
 

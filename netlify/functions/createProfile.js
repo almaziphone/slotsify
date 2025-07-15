@@ -27,7 +27,7 @@ export async function handler(event) {
   const userId = userData.user.id
   const { error: profileError } = await supabase
     .from('profiles')
-    .insert([{ id: userId, coins: 1000, username: '' }])
+    .insert([{ id: userId, coins: 1000, username: username }])
 
   if (profileError) {
     return {
