@@ -134,7 +134,7 @@ export default function SlotMachine({ coins, onSpin, spinLoading, spinResult, wh
         {wheels.map((n, i) => {
           const isSpinning = spinningReels[i];
           // Use spinningOffsets for both spinning and animated stop
-          const bgPos = `0px ${-spinningOffsets[i] + (isSpinning ? 0 : (reelPositions[i] ?? 0))}px`;
+          const bgPos = `0px ${-spinningOffsets[i] + (isSpinning ? 0 : (reelPositions[i] ?? 0)) - REEL_SYMBOL_HEIGHT / 2}px`;
           return (
             <div
               className={`slot-reel${isSpinning ? ' spinning' : ''}`}
@@ -145,7 +145,7 @@ export default function SlotMachine({ coins, onSpin, spinLoading, spinResult, wh
                 transition: isSpinning || !showTransition[i]
                   ? 'none'
                   : 'background-position 0.3s cubic-bezier(0.40, -0.01, 0.60, 1.20)',
-                height: REEL_SYMBOL_HEIGHT * 3,
+                height: REEL_SYMBOL_HEIGHT * 2,
                 width: 80,
                 overflow: 'hidden',
               }}
