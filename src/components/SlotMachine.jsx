@@ -160,7 +160,7 @@ export default function SlotMachine({ coins, onSpin, spinLoading, spinResult, wh
       >
         {spinLoading ? 'Spinning...' : 'Spin (10 coins)'}
       </button>
-      {spinResult && (
+      {!spinResult ? (<div><p className='result-win empty'>&nbsp;</p></div>) : (
         <div className="spin-result">
           <p className={spinResult.win ? 'result-win' : 'result-lose'}>
             {spinResult.win
