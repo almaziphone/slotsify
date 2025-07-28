@@ -7,7 +7,28 @@ const supabase = createClient(
 )
 
 const SYMBOLS = [0, 1, 2, 3, 4, 5, 6, 7, 8] // Representing symbols as numbers for simplicity
+const WEIGHTS = [1, 2, 3, 4, 5, 6, 7, 8, 9] 
 
+const KUMULATIVA_WEIGHTS = [];
+let totalWeight = 0;
+for (const weight of WEIGHTS) {
+    totalWeight += weight;
+    KUMULATIVA_WEIGHTS.push(totalWeight);
+}
+
+function chooseSymbol() {
+    const randomNumber = Math.random() * totalWeight;
+
+    if (randomNumber < KUMULATIVA_WEIGHTS[0]) return SYMBOLS[0];
+    if (randomNumber < KUMULATIVA_WEIGHTS[1]) return SYMBOLS[1];
+    if (randomNumber < KUMULATIVA_WEIGHTS[2]) return SYMBOLS[2];
+    if (randomNumber < KUMULATIVA_WEIGHTS[3]) return SYMBOLS[3];
+    if (randomNumber < KUMULATIVA_WEIGHTS[4]) return SYMBOLS[4];
+    if (randomNumber < KUMULATIVA_WEIGHTS[5]) return SYMBOLS[5];
+    if (randomNumber < KUMULATIVA_WEIGHTS[6]) return SYMBOLS[6];
+    if (randomNumber < KUMULATIVA_WEIGHTS[7]) return SYMBOLS[7];
+    return SYMBOLS[8];
+}
 
 // Helper to check win and payout
 function getPayout(spin) {
@@ -62,7 +83,7 @@ export async function handler(event) {
 
   // RNG: simulate a basic slot outcome with the right amount of symbols
   const spin = Array.from({ length: 3 }, () =>
-    SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)]
+    SYMBOLS[chooseSymbol()]
   )
 
   // Check win and payout
