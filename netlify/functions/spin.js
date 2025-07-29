@@ -6,7 +6,7 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY // Keep this secret!
 )
 
-const SYMBOLS = [0, 1, 2, 3, 4, 5, 6, 7, 8] // Representing symbols as numbers for simplicity
+const SYMBOLS = [0, 1, 2, 3, 4, 5, 6, 7, 8]
 const WEIGHTS = [1, 2, 3, 4, 5, 6, 7, 8, 9] 
 
 const KUMULATIVA_WEIGHTS = [];
@@ -81,7 +81,7 @@ export async function handler(event) {
     }
   }
 
-  // RNG: simulate a basic slot outcome with the right amount of symbols
+  // RNG: Generate spin result
   const spin = Array.from({ length: 3 }, () =>
     SYMBOLS[chooseSymbol()]
   )
