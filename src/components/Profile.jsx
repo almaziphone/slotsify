@@ -105,6 +105,7 @@ export default function Profile({ user: initialUser, profile: initialProfile, on
     setSpinLoading(true)
     setSpinResult(null)
     setErrorMsg(null)
+    profile.coins -= 10
     animateWheels([0, 0, 0])
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) {

@@ -23,7 +23,7 @@ export default function AuthForm({ onAuth }) {
     const { data, error } = await response.json()
 
     if (error) {
-      setErrorMsg(error.message || 'An error occurred')
+      setErrorMsg(error.code == "invalid_credentials" ? 'Username or password was wrong' : 'An error occurred when trying to authenticate.')
       setLoading(false)
       return
     }
