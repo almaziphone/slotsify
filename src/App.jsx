@@ -1,51 +1,46 @@
-import { useEffect, useState } from 'react'
-import { supabase } from './supabaseClient'
-import AuthForm from './components/AuthForm'
-import Profile from './components/Profile'
+import { useEffect, useState } from 'react';
+import { supabase } from './supabaseClient';
+import AuthForm from './components/AuthForm';
+import Profile from './components/Profile';
 
 function App() {
-  const [session, setSession] = useState(null)
-  const [user, setUser] = useState(null)
-  const [profile, setProfile] = useState(null)
+  const [session, setSession] = useState(null);
+  const [user, setUser] = useState(null);
+  const [profile, setProfile] = useState(null);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session)
-    })
-
+    supabase.auth.getSession().then((response) => {
+      setSession(response.data.session);
+    });
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session)
-    })
+      setSession(session);
+    });
+    return () => listener?.subscription.unsubscribe();
+  }, []);
 
-    return () => listener?.subscription.unsubscribe()
-  }, [])
-
+  // Handle authentication
   const handleAuth = async (data) => {
-    setSession(data.session)
-    setUser(data.user)
-    setProfile(data.profile)
+    setSession(data.session);
+    setUser(data.user);
+    setProfile(data.profile);
     // Set session in Supabase client so getSession() works
     if (data.session) {
       await supabase.auth.setSession({
         access_token: data.session.access_token,
         refresh_token: data.session.refresh_token,
-      })
+      });
     }
-  }
+  };
 
   return (
     <div className="app">
       {session ? (
-        <Profile
-          user={user}
-          profile={profile}
-          onLogout={() => setSession(null)}
-        />
+        <Profile user={user} profile={profile} onLogout={() => setSession(null)} />
       ) : (
         <AuthForm onAuth={handleAuth} />
       )}
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
