@@ -6,8 +6,8 @@ import { SYMBOLS_MAP, WIN_TABLE_DISPLAY, formatCombo } from './winTable.jsx';
 const REEL_SYMBOL_HEIGHT = 80; // px, adjust to match symbol height in slotreel.webp
 const REEL_SYMBOLS_COUNT = 9; // adjust to match number of symbols in slotreel.webp
 const REEL_COUNT = 3;
-const REEL_STOP_DELAY = 400; // ms between each reel stop
-const SPIN_SPEED = 24; // px per frame (adjust for speed)
+const REEL_STOP_DELAY = 600; // ms between each reel stop
+const SPIN_SPEED = 10; // px per frame (adjust for speed)
 const EXTRA_SPINS = 2; // Number of extra full spins before stopping
 
 export default function SlotMachine({ coins, onSpin, spinLoading, spinResult, wheels }) {
@@ -116,7 +116,7 @@ export default function SlotMachine({ coins, onSpin, spinLoading, spinResult, wh
                 updated[i] = 0;
                 return updated;
               });
-            }, 20);
+            }, 10);
           }, 20);
         }, i * REEL_STOP_DELAY);
       });
