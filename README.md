@@ -26,11 +26,16 @@ Slotsify is a simple online slot machine game built with React and Vite. Users c
    ```
 
 2. **Set up environment variables:**
-   - Copy `.env.example` to `.env` and fill in your Supabase keys.
+   - Copy `.env.example` to `.env`.
+   - Fill in your Supabase project details:
+     - `VITE_SUPABASE_URL` — URL проекта Supabase
+     - `VITE_SUPABASE_KEY` — публичный anon key
+     - `SUPABASE_URL` — URL проекта для функций Netlify
+     - `SUPABASE_SERVICE_ROLE_KEY` — service role key (не публикуйте)
 
-3. **Run the development server:**
+3. **Run the development server** (Netlify Functions + Vite):
    ```sh
-   npm run dev
+   npx netlify dev
    ```
 
 4. **Build for production:**
