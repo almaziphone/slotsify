@@ -33,9 +33,9 @@ Slotsify is a simple online slot machine game built with React and Vite. Users c
      - `SUPABASE_URL` — URL проекта для функций Netlify
      - `SUPABASE_SERVICE_ROLE_KEY` — service role key (не публикуйте)
 
-3. **Run the development server:**
+3. **Run the development server** (Netlify Functions + Vite):
    ```sh
-   npm run dev
+   npx netlify dev
    ```
 
 4. **Build for production:**

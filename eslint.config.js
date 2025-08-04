@@ -26,4 +26,10 @@ export default defineConfig([
       'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
     },
   },
+  {
+    files: ['netlify/functions/**/*.{js,ts}'],
+    languageOptions: {
+      globals: globals.node,
+    },
+  },
 ])
