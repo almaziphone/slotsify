@@ -25,13 +25,12 @@ export default function AuthForm({ onAuth }: AuthFormProps) {
         body: JSON.stringify({ username, email, password }),
       })
 
-      if (!response.ok) {
-        setErrorMsg('Сервер недоступен. Попробуйте позже.')
-        return
-      }
-
       const { data, error } = await response.json()
 
+      if (!response.ok) {
+        setErrorMsg(error?.message ?? 'Сервер недоступен. Попробуйте позже.')
+        return
+      }
       if (error) {
         setErrorMsg(
           error.code === 'invalid_credentials'
