@@ -31,7 +31,6 @@ export default function AuthForm({ onAuth }: AuthFormProps) {
         setErrorMsg(error?.message ?? 'Сервер недоступен. Попробуйте позже.')
         return
       }
-
       if (error) {
         setErrorMsg(
           error.code === 'invalid_credentials'
