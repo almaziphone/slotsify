@@ -1,46 +1,53 @@
-import { useState, useRef, useEffect } from 'react';
-import '../styles/SlotMachine.css';
-import { SYMBOLS_MAP, WIN_TABLE_DISPLAY, formatCombo } from './winTable.jsx';
+import { useState, useRef, useEffect } from 'react'
+import '../styles/SlotMachine.css'
+import { SYMBOLS_MAP, WIN_TABLE_DISPLAY, formatCombo } from './winTable'
 
 // Constants - These could be moved to a separate config file
-const REEL_SYMBOL_HEIGHT = 80; // px, adjust to match symbol height in slotreel.webp
-const REEL_SYMBOLS_COUNT = 9; // adjust to match number of symbols in slotreel.webp
-const REEL_COUNT = 3;
-const REEL_STOP_DELAY = 600; // ms between each reel stop
-const SPIN_SPEED = 10; // px per frame (adjust for speed)
-const EXTRA_SPINS = 2; // Number of extra full spins before stopping
+const REEL_SYMBOL_HEIGHT = 80 // px, adjust to match symbol height in slotreel.webp
+const REEL_SYMBOLS_COUNT = 9 // adjust to match number of symbols in slotreel.webp
+const REEL_COUNT = 3
+const REEL_STOP_DELAY = 600 // ms between each reel stop
+const SPIN_SPEED = 10 // px per frame (adjust for speed)
+const EXTRA_SPINS = 2 // Number of extra full spins before stopping
 
-export default function SlotMachine({ coins, onSpin, spinLoading, spinResult, wheels }) {
+function getReelPosition(n: number): number {
+  // n is 1-based, so symbol 1 is at offset 0
+  return -(n - 1) * REEL_SYMBOL_HEIGHT
+}
+
+// Calculate the final offset for a reel, given its current offset and target symbol
+function calculateTargetOffset(currentOffset: number, targetSymbol: number): number {
+  const totalHeight = REEL_SYMBOL_HEIGHT * REEL_SYMBOLS_COUNT
+  let normalized = ((currentOffset % totalHeight) + totalHeight) % totalHeight
+  const targetOffset = getReelPosition(targetSymbol)
+  let distance = (targetOffset - (-normalized)) - (EXTRA_SPINS * totalHeight)
+  if (distance > 0) {
+    distance -= totalHeight
+  }
+  return currentOffset + distance
+}
+
+interface SlotMachineProps {
+  coins: number
+  onSpin: () => void
+  spinLoading: boolean
+  spinResult: { win: boolean; payout: number; spin: number[] } | null
+  wheels: number[]
+}
+
+export default function SlotMachine({ coins, onSpin, spinLoading, spinResult, wheels }: SlotMachineProps) {
   // State variables
-  const [reelPositions, setReelPositions] = useState(() => wheels.map(n => getReelPosition(n)));
-  const [spinningReels, setSpinningReels] = useState(Array(REEL_COUNT).fill(false));
-  const [spinningOffsets, setSpinningOffsets] = useState(Array(REEL_COUNT).fill(0));
-  const [showTransition, setShowTransition] = useState(Array(REEL_COUNT).fill(false));
-  const [allReelsStopped, setAllReelsStopped] = useState(true);
-  const prevWheels = useRef(wheels);
-  const rafRef = useRef();
-
-  // Helper function
-  function getReelPosition(n) {
-    // n is 1-based, so symbol 1 is at offset 0
-    return -(n - 1) * REEL_SYMBOL_HEIGHT;
-  }
-
-  // Calculate the final offset for a reel, given its current offset and target symbol
-  function calculateTargetOffset(currentOffset, targetSymbol) {
-    const totalHeight = REEL_SYMBOL_HEIGHT * REEL_SYMBOLS_COUNT;
-    let normalized = ((currentOffset % totalHeight) + totalHeight) % totalHeight;
-    const targetOffset = getReelPosition(targetSymbol);
-    let distance = (targetOffset - (-normalized)) - (EXTRA_SPINS * totalHeight);
-    if (distance > 0) {
-      distance -= totalHeight;
-    }
-    return currentOffset + distance;
-  }
+  const [reelPositions, setReelPositions] = useState<number[]>(() => wheels.map(n => getReelPosition(n)))
+  const [spinningReels, setSpinningReels] = useState<boolean[]>(Array(REEL_COUNT).fill(false))
+  const [spinningOffsets, setSpinningOffsets] = useState<number[]>(Array(REEL_COUNT).fill(0))
+  const [showTransition, setShowTransition] = useState<boolean[]>(Array(REEL_COUNT).fill(false))
+  const [allReelsStopped, setAllReelsStopped] = useState(true)
+  const prevWheels = useRef<number[]>(wheels)
+  const rafRef = useRef<number>()
 
   // Animation using requestAnimationFrame
   useEffect(() => {
-    let running = true;
+    let running = true
 
     function animate() {
       setSpinningOffsets(offsets =>
@@ -49,22 +56,22 @@ export default function SlotMachine({ coins, onSpin, spinLoading, spinResult, wh
             ? (offset + SPIN_SPEED) % (REEL_SYMBOL_HEIGHT * REEL_SYMBOLS_COUNT)
             : offset
         )
-      );
+      )
 
       if (spinningReels.some(Boolean) && running) {
-        rafRef.current = requestAnimationFrame(animate);
+        rafRef.current = requestAnimationFrame(animate)
       }
     }
 
     if (spinningReels.some(Boolean)) {
-      rafRef.current = requestAnimationFrame(animate);
+      rafRef.current = requestAnimationFrame(animate)
     }
 
     return () => {
-      running = false;
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    };
-  }, [spinningReels]);
+      running = false
+      if (rafRef.current) cancelAnimationFrame(rafRef.current)
+    }
+  }, [spinningReels])
 
   // Start spinning when spinLoading is true
   useEffect(() => {
@@ -82,52 +89,52 @@ export default function SlotMachine({ coins, onSpin, spinLoading, spinResult, wh
       wheels.forEach((n, i) => {
         setTimeout(() => {
           setSpinningReels(reels => {
-            const updated = [...reels];
-            updated[i] = false;
+            const updated = [...reels]
+            updated[i] = false
             if (updated.every(r => !r)) {
-              setAllReelsStopped(true);
+              setAllReelsStopped(true)
             }
-            return updated;
-          });
+            return updated
+          })
           setTimeout(() => {
             setShowTransition(trans => {
-              const updated = [...trans];
-              updated[i] = true;
-              return updated;
-            });
+              const updated = [...trans]
+              updated[i] = true
+              return updated
+            })
             setSpinningOffsets(offsets => {
-              const updated = [...offsets];
-              updated[i] = calculateTargetOffset(offsets[i], n);
-              return updated;
-            });
+              const updated = [...offsets]
+              updated[i] = calculateTargetOffset(offsets[i], n)
+              return updated
+            })
             setTimeout(() => {
               setShowTransition(trans => {
-                const updated = [...trans];
-                updated[i] = false;
-                return updated;
-              });
+                const updated = [...trans]
+                updated[i] = false
+                return updated
+              })
               setReelPositions(pos => {
-                const updated = [...pos];
-                updated[i] = getReelPosition(n);
-                return updated;
-              });
+                const updated = [...pos]
+                updated[i] = getReelPosition(n)
+                return updated
+              })
               setSpinningOffsets(offsets => {
-                const updated = [...offsets];
-                updated[i] = 0;
-                return updated;
-              });
-            }, 10);
-          }, 20);
-        }, i * REEL_STOP_DELAY);
-      });
-      prevWheels.current = wheels;
+                const updated = [...offsets]
+                updated[i] = 0
+                return updated
+              })
+            }, 10)
+          }, 20)
+        }, i * REEL_STOP_DELAY)
+      })
+      prevWheels.current = wheels
     }
-  }, [wheels, spinLoading]);
+  }, [wheels, spinLoading])
 
   // Ensure reelPositions always matches wheels
   useEffect(() => {
-    setReelPositions(wheels.map(n => getReelPosition(n)));
-  }, [wheels.length]);
+    setReelPositions(wheels.map(n => getReelPosition(n)))
+  }, [wheels])
 
   return (
     <div className="slot-machine">
@@ -191,5 +198,5 @@ export default function SlotMachine({ coins, onSpin, spinLoading, spinResult, wh
         </tbody>
       </table>
     </div>
-  );
-};
+  )
+}
