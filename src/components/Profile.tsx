@@ -3,25 +3,37 @@ import { supabase } from '../supabaseClient'
 import '../styles/Profile.css'
 import SlotMachine from './SlotMachine'
 
-export default function Profile({ user: initialUser, profile: initialProfile, onLogout }) {
-  const [profile, setProfile] = useState(initialProfile || null)
-  const [user, setUser] = useState(initialUser || null)
-  const [errorMsg, setErrorMsg] = useState(null)
+interface ProfileData {
+  id: string
+  coins: number
+  username: string
+}
+
+interface SpinResult {
+  win: boolean
+  payout: number
+  coins: number
+  spin: number[]
+}
+
+interface ProfileProps {
+  user?: unknown
+  profile?: ProfileData | null
+  onLogout: () => void
+}
+
+export default function Profile({ user: initialUser, profile: initialProfile, onLogout }: ProfileProps) {
+  const [profile, setProfile] = useState<ProfileData | null>(initialProfile || null)
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [showProfileForm, setShowProfileForm] = useState(false)
   const [username, setUsername] = useState('')
-  const [spinResult, setSpinResult] = useState(null)
+  const [spinResult, setSpinResult] = useState<SpinResult | null>(null)
   const [spinLoading, setSpinLoading] = useState(false)
-  const [wheels, setWheels] = useState([0, 0, 0])
+  const [wheels, setWheels] = useState<number[]>([0, 0, 0])
 
   useEffect(() => {
     async function loadProfile() {
       setErrorMsg(null)
-      if (initialUser) {
-        setUser(initialUser)
-      } else {
-        const { data: userData } = await supabase.auth.getUser()
-        setUser(userData?.user)
-      }
       const currentUser = initialUser || (await supabase.auth.getUser()).data?.user
       if (!currentUser) {
         setErrorMsg('User not found.')
@@ -102,6 +114,7 @@ export default function Profile({ user: initialUser, profile: initialProfile, on
   }
 
   const handleSpin = async () => {
+    if (!profile) return
     setSpinLoading(true)
     setSpinResult(null)
     setErrorMsg(null)
